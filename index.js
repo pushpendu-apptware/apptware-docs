@@ -104,10 +104,40 @@ app.post('/generate-doc', (req, res) => {
     }
 });
 
-// Add download endpoint
+// Update download endpoint with stream handling
 app.get('/download/:filename', (req, res) => {
     const filePath = path.join(__dirname, 'output', req.params.filename);
-    res.download(filePath);
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Set headers
+    res.setHeader('Content-Disposition', `attachment; filename=${req.params.filename}`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+
+    // Create read stream
+    const fileStream = fs.createReadStream(filePath);
+
+    // Handle stream events
+    fileStream.on('error', (error) => {
+        console.error('Stream error:', error);
+        res.status(500).end();
+    });
+
+    // Pipe the file to response
+    fileStream.pipe(res);
+
+    // When response is finished, delete the file
+    res.on('finish', () => {
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error('Error deleting file:', err);
+            } else {
+                console.log('Successfully deleted file:', filePath);
+            }
+        });
+    });
 });
 
 app.listen(port, () => {
