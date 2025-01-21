@@ -1,0 +1,22 @@
+{
+    "nda": {
+        "path": "./docs/Apptware - NDA - 2025.docx",
+        "inputs": [
+            {
+                "name": "Effitive Date",
+                "alias": "$effectiveDate",
+                "type": "text"
+            },
+            {
+                "name": "Company Name",
+                "alias": "$companyName",
+                "type": "text"
+            },
+            {
+                "name": "Company Address",
+                "alias": "$companyAddress",
+                "type": "text"
+            }
+        ]
+    }
+}
