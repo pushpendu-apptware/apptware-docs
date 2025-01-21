@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./config.json');
 const dotenv = require('dotenv');
+const cors = require('cors');
 
 // Add these for better error handling
 const InspectModule = require("docxtemplater/js/inspect-module");
@@ -17,14 +18,18 @@ const app = express();
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || 'localhost';
 
+// Configure CORS with all permissions
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    credentials: true
+}));
+
 app.use(express.json());
 
 // Add static file serving for downloads
 app.use('/downloads', express.static(path.join(__dirname, 'output')));
-
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
 
 app.post('/generate-doc', (req, res) => {
     try {
