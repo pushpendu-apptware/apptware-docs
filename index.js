@@ -5,13 +5,17 @@ const Docxtemplater = require('docxtemplater');
 const fs = require('fs');
 const path = require('path');
 const config = require('./config.json');
+const dotenv = require('dotenv');
 
 // Add these for better error handling
 const InspectModule = require("docxtemplater/js/inspect-module");
 const expressions = require("docxtemplater/js/expressions.js");
 
+dotenv.config();
+
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
+const host = process.env.HOST || 'localhost';
 
 app.use(express.json());
 
@@ -77,7 +81,7 @@ app.post('/generate-doc', (req, res) => {
         fs.writeFileSync(outputPath, buffer);
 
         // Generate download URL
-        const downloadUrl = `http://localhost:${port}/downloads/${fileName}`;
+        const downloadUrl = `http://${host}:${port}/downloads/${fileName}`;
 
         res.json({
             success: true,
