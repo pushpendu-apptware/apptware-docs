@@ -81,7 +81,7 @@ app.post('/generate-doc', (req, res) => {
         fs.writeFileSync(outputPath, buffer);
 
         // Generate download URL
-        const downloadUrl = `http://${host}:${port}/downloads/${fileName}`;
+        const downloadUrl = `http://${host}/downloads/${fileName}`;
 
         res.json({
             success: true,
