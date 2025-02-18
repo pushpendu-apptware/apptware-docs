@@ -1,6 +1,6 @@
 {
     "nda": {
-        "path": "./docs/Apptware - NDA - 2025.docx",
+        "path" : "./docs/Apptware - RealML Labs - NDA - 2025.docx",
         "inputs": [
             {
                 "name": "Effitive Date",
@@ -15,6 +15,11 @@
             {
                 "name": "Company Address",
                 "alias": "$companyAddress",
+                "type": "text"
+            },
+            {
+                "name": "Company Title",
+                "alias": "$companyTitle",
                 "type": "text"
             }
         ]
