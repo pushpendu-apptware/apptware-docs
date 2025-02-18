@@ -69,7 +69,7 @@ exports.generateDoc = (req, res) => {
         fs.writeFileSync(outputPath, buffer);
 
         const host = process.env.HOST || 'localhost:3000';
-        const downloadUrl = `http://${host}/downloads/${fileName}`;
+        const downloadUrl = `https://${host}/downloads/${fileName}`;
 
         res.json({
             success: true,
