@@ -1,4 +1,29 @@
 {
+    "msa": {
+        "path" : "./docs/Apptware - - MSA -2025.docx",
+        "inputs": [
+            {
+                "name": "Effitive Date",
+                "alias": "$effectiveDate",
+                "type": "text"
+            },
+            {
+                "name": "Company Name",
+                "alias": "$companyName",
+                "type": "text"
+            },
+            {
+                "name": "Company Address",
+                "alias": "$companyAddress",
+                "type": "text"
+            },
+            {
+                "name": "Company Title",
+                "alias": "$companyTitle",
+                "type": "text"
+            }
+        ]
+    },
     "nda": {
         "path" : "./docs/Apptware - RealML Labs - NDA - 2025.docx",
         "inputs": [

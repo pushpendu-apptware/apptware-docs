@@ -8,89 +8,93 @@ const config = require('../config.json');
 
 exports.generateDoc = (req, res) => {
     try {
-        // Transform input data to match template variables (without $ prefix)
-        const templateVars = config.nda.inputs.reduce((acc, input) => {
-            const varName = input.alias.replace('$', '');
-            if (!req.body[varName]) {
-                throw new Error(`Missing required variable: ${input.name}`);
+        const selectedDocs = [];
+        console.log('Request body:', req.body);
+        if (req.body.nda) selectedDocs.push("nda");
+        if (req.body.msa) selectedDocs.push("msa");
+
+        if (selectedDocs.length === 0) {
+            throw new Error("No document selected");
+        }
+
+        const downloadUrls = [];
+
+        selectedDocs.forEach((docKey) => {
+            const docConfig = config[docKey];
+            // Process required input variables from config, skip auto-generated companyTitle
+            const templateVars = docConfig.inputs.reduce((acc, input) => {
+                const varName = input.alias.replace('$', '');
+                if(varName === 'companyTitle'){
+                    return acc;
+                }
+                if (!req.body[varName]) {
+                    throw new Error(`Missing required variable: ${input.name}`);
+                }
+                acc[varName] = req.body[varName];
+                return acc;
+            }, {});
+
+            // Automatically generate company title from company address.
+            if (!req.body.companyAddress) {
+                throw new Error("Missing required variable: Company Address");
             }
-            acc[varName] = req.body[varName];
-            return acc;
-        }, {});
+            // Generate companyTitle from companyAddress (using the first word)
+            const computedTitle = req.body.companyAddress.split(' ')[0];
+            templateVars.companyTitle = computedTitle;
+            // Also extract a first-name-like value from company address if needed
+            templateVars.companyAddressFirstName = computedTitle;
 
-        // Ensure companyTitle is provided, then add it to templateVars
-        if (!req.body.companyTitle) {
-            throw new Error('Missing required variable: Company Title');
-        }
-        templateVars['companyTitle'] = req.body.companyTitle;
+            // Read the template and generate document using InspectModule for debugging
+            const template = fs.readFileSync(docConfig.path, 'binary');
+            const zip = new PizZip(template);
+            const iModule = InspectModule();
+            const doc = new Docxtemplater(zip, {
+                paragraphLoop: true,
+                linebreaks: true,
+                modules: [iModule]
+            });
+            doc.render(templateVars);
 
-        // Extract first name from companyAddress and add it to templateVars
-        const companyAddressFirstName = req.body.companyAddress.split(' ')[0];
-        templateVars['companyAddressFirstName'] = companyAddressFirstName;
+            console.log('Tags found in template:', iModule.getAllTags());
 
-        console.log('Template variables:', templateVars);
+            // Determine file name
+            let fileName;
+            if (req.body.companyName) {
+                const safeCompanyName = req.body.companyName
+                    .replace(/[^a-zA-Z0-9]/g, '-')
+                    .replace(/-+/g, '-')
+                    .replace(/(^-|-$)/g, '');
+                fileName = `${docKey}-${safeCompanyName}-${Date.now()}.docx`;
+            } else {
+                fileName = `${docKey}-${Date.now()}.docx`;
+            }
 
-        const template = fs.readFileSync(config.nda.path, 'binary');
-        const zip = new PizZip(template);
+            const outputDir = path.join(__dirname, '../output');
+            if (!fs.existsSync(outputDir)) {
+                fs.mkdirSync(outputDir);
+            }
+            const outputPath = path.join(outputDir, fileName);
+            fs.writeFileSync(outputPath, doc.getZip().generate({ type: 'nodebuffer' }));
 
-        // Add inspect module for debugging
-        const iModule = InspectModule();
-
-        const doc = new Docxtemplater(zip, {
-            paragraphLoop: true,
-            linebreaks: true,
-            modules: [iModule]
+            const host = process.env.HOST || 'localhost:5000';
+            downloadUrls.push(`https://${host}/downloads/${fileName}`);
         });
 
-        // Render with clean variable names
-        doc.render(templateVars);
-
-        console.log('Tags found in template:', iModule.getAllTags());
-
-        const buffer = doc.getZip().generate({ type: 'nodebuffer' });
-
-        // Get original filename without extension
-        const originalName = path.basename(config.nda.path, '.docx');
-
-        // Use companyName from request body for filename
-        const safeCompanyName = req.body.companyName
-            .replace(/[^a-zA-Z0-9]/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/(^-|-$)/g, '');
-
-        const fileName = `${originalName}-${safeCompanyName}-${Date.now()}.docx`;
-        const outputPath = path.join(__dirname, '../output', fileName);
-
-        // Create output directory if it doesn't exist
-        if (!fs.existsSync(path.join(__dirname, '../output'))) {
-            fs.mkdirSync(path.join(__dirname, '../output'));
-        }
-
-        fs.writeFileSync(outputPath, buffer);
-
-        const host = process.env.HOST || 'localhost:3000';
-        const downloadUrl = `https://${host}/downloads/${fileName}`;
-
-        res.json({
-            success: true,
-            file: outputPath,
-            downloadUrl: downloadUrl
-        });
+        res.json({ success: true, downloadUrls });
     } catch (error) {
         console.error('Template error:', error);
-        if (error.properties && error.properties.errors instanceof Array) {
-            const errorMessages = error.properties.errors.map(e => e.properties.explanation).join("\n");
-            console.log('Detailed error:', errorMessages);
-        }
         res.status(500).json({
             error: error.message,
-            requiredVariables: config.nda.inputs.map(i => ({
-                name: i.name,
-                variable: i.alias.replace('$', '')
-            })).concat({
-                name: 'Company Title',
-                variable: 'companyTitle'
-            })
+            requiredVariables: config.nda.inputs
+                .filter(i => i.alias.replace('$', '') !== 'companyTitle')
+                .map(i => ({
+                    name: i.name,
+                    variable: i.alias.replace('$', '')
+                }))
+                .concat({
+                    name: 'Company Address',
+                    variable: 'companyAddress'
+                })
         });
     }
 };
