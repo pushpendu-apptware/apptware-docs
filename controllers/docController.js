@@ -38,11 +38,9 @@ exports.generateDoc = (req, res) => {
             if (!req.body.companyAddress) {
                 throw new Error("Missing required variable: Company Address");
             }
-            // Generate companyTitle from companyAddress (using the first word)
-            const computedTitle = req.body.companyAddress.split(' ')[0];
+            // Generate companyTitle from companyName (using the first word)
+            const computedTitle = req.body.companyName.split(' ')[0];
             templateVars.companyTitle = computedTitle;
-            // Also extract a first-name-like value from company address if needed
-            templateVars.companyAddressFirstName = computedTitle;
 
             // Read the template and generate document using InspectModule for debugging
             const template = fs.readFileSync(docConfig.path, 'binary');
@@ -76,8 +74,13 @@ exports.generateDoc = (req, res) => {
             const outputPath = path.join(outputDir, fileName);
             fs.writeFileSync(outputPath, doc.getZip().generate({ type: 'nodebuffer' }));
 
-            const host = process.env.HOST || 'localhost:5000';
-            downloadUrls.push(`https://${host}/downloads/${fileName}`);
+            const host = process.env.HOST || 'http://localhost:3000';
+            downloadUrls.push(`${host}/downloads/${fileName}`);
+
+            // once the download urls got generated automatically giving get requests to that urls
+            // to download the files
+
+
         });
 
         res.json({ success: true, downloadUrls });
