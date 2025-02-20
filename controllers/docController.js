@@ -21,10 +21,10 @@ exports.generateDoc = (req, res) => {
 
         selectedDocs.forEach((docKey) => {
             const docConfig = config[docKey];
-            // Process required input variables from config, skip auto-generated companyTitle
+            // Process required input variables from config, skip auto-generated companyAddressFirstName
             const templateVars = docConfig.inputs.reduce((acc, input) => {
                 const varName = input.alias.replace('$', '');
-                if(varName === 'companyTitle'){
+                if(varName === 'companyFirstName'){
                     return acc;
                 }
                 if (!req.body[varName]) {
@@ -38,9 +38,9 @@ exports.generateDoc = (req, res) => {
             if (!req.body.companyAddress) {
                 throw new Error("Missing required variable: Company Address");
             }
-            // Generate companyTitle from companyName (using the first word)
-            const computedTitle = req.body.companyName.split(' ')[0];
-            templateVars.companyTitle = computedTitle;
+            // Generate companyTitle from companyFullName (using the first word)
+            const computedTitle = req.body.companyFullName.split(' ')[0];
+            templateVars.companyFirstName = computedTitle;
 
             // Read the template and generate document using InspectModule for debugging
             const template = fs.readFileSync(docConfig.path, 'binary');
@@ -57,12 +57,12 @@ exports.generateDoc = (req, res) => {
 
             // Determine file name
             let fileName;
-            if (req.body.companyName) {
-                const safeCompanyName = req.body.companyName
+            if (req.body.companyFullName) {
+                const safecompanyFullName = req.body.companyFullName
                     .replace(/[^a-zA-Z0-9]/g, '-')
                     .replace(/-+/g, '-')
                     .replace(/(^-|-$)/g, '');
-                fileName = `${docKey}-${safeCompanyName}-${Date.now()}.docx`;
+                fileName = `${docKey}-${safecompanyFullName}-${Date.now()}.docx`;
             } else {
                 fileName = `${docKey}-${Date.now()}.docx`;
             }
@@ -74,13 +74,8 @@ exports.generateDoc = (req, res) => {
             const outputPath = path.join(outputDir, fileName);
             fs.writeFileSync(outputPath, doc.getZip().generate({ type: 'nodebuffer' }));
 
-            const host = process.env.HOST || 'http://localhost:3000';
+            const host = process.env.HOST;
             downloadUrls.push(`${host}/downloads/${fileName}`);
-
-            // once the download urls got generated automatically giving get requests to that urls
-            // to download the files
-
-
         });
 
         res.json({ success: true, downloadUrls });

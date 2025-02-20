@@ -9,7 +9,7 @@
             },
             {
                 "name": "Company Name",
-                "alias": "$companyName",
+                "alias": "$companyFullName",
                 "type": "text"
             },
             {
@@ -18,8 +18,18 @@
                 "type": "text"
             },
             {
-                "name": "Company Title",
-                "alias": "$companyTitle",
+                "name": "Company first Name",
+                "alias": "$companyFirstName",
+                "type": "text"
+            },
+            {
+                "name": "Client Name",
+                "alias": "$clientName",
+                "type": "text"
+            },
+            {
+                "name": "Client Designation",
+                "alias": "$clientDesignation",
                 "type": "text"
             }
         ]
@@ -34,7 +44,7 @@
             },
             {
                 "name": "Company Name",
-                "alias": "$companyName",
+                "alias": "$companyFullName",
                 "type": "text"
             },
             {
@@ -43,8 +53,18 @@
                 "type": "text"
             },
             {
-                "name": "Company Title",
-                "alias": "$companyTitle",
+                "name": "Company first Name",
+                "alias": "$companyFirstName",
+                "type": "text"
+            },
+            {
+                "name": "Client Name",
+                "alias": "$clientName",
+                "type": "text"
+            },
+            {
+                "name": "Client Designation",
+                "alias": "$clientDesignation",
                 "type": "text"
             }
         ]
